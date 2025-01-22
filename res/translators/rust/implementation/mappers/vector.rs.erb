@@ -9,15 +9,15 @@
 #[repr(C)]
 pub(crate) struct __sklib_vector_<%= type %> {
     data_from_app: *mut <%= lib_type %>,
-    size_from_app: usize,
+    size_from_app: u32,
     data_from_lib: *mut <%= lib_type %>,
-    size_from_lib: usize,
+    size_from_lib: u32,
 }
 
 impl __sklib_vector_<%= type %> {
-    pub fn new(size: usize) -> Self {
-        let mut vec = Vec::with_capacity(size);
-        vec.resize(size, unsafe { zeroed() });
+    pub fn new(size: u32) -> Self {
+        let mut vec = Vec::with_capacity(size as usize);
+        vec.resize(size as usize, unsafe { zeroed() });
         let ptr = vec.as_mut_ptr();
         forget(vec);
         Self {
@@ -38,17 +38,17 @@ pub(crate) fn __skadapter__free__sklib_vector_<%= type %>(v: &mut __sklib_vector
         unsafe {
 <% if type == "string" %>
             for i in 0..v.size_from_app {
-                __skadapter__free__sklib_string(*v.data_from_app.add(i));
+                __skadapter__free__sklib_string(*v.data_from_app.add(i as usize));
             }
 <% end %>
-            Vec::from_raw_parts(v.data_from_app, v.size_from_app, v.size_from_app);
+            Vec::from_raw_parts(v.data_from_app, v.size_from_app as usize, v.size_from_app as usize);
         }
         v.data_from_app = null_mut();
     }
 }
 
 pub(crate) fn __skadapter__to_sklib_vector_<%= type %>(v: Vec<<%= sk_type %>>) -> __sklib_vector_<%= type %> {
-    let result = __sklib_vector_<%= type %>::new(v.len());
+    let result = __sklib_vector_<%= type %>::new(v.len() as u32);
     for (i, item) in v.iter().enumerate() {
         unsafe {
             *result.data_from_app.add(i) = __skadapter__to_sklib_<%= type %>(item.clone());
@@ -58,10 +58,10 @@ pub(crate) fn __skadapter__to_sklib_vector_<%= type %>(v: Vec<<%= sk_type %>>) -
 }
 
 pub(crate) fn __skadapter__to_vector_<%= type %>(v: __sklib_vector_<%= type %>) -> Vec<<%= sk_type %>> {
-    let mut result = Vec::with_capacity(v.size_from_lib);
+    let mut result = Vec::with_capacity(v.size_from_lib as usize);
     unsafe {
         for i in 0..v.size_from_lib {
-            let item = (*v.data_from_lib.add(i)).clone();
+            let item = (*v.data_from_lib.add(i as usize)).clone();
             result.push(__skadapter__to_<%= type %>(item));
         }
         __sklib__free__sklib_vector_<%= type %>(v);
@@ -73,7 +73,7 @@ pub(crate) fn __skadapter__update_from_vector_<%= type %>(v: __sklib_vector_<%= 
     result.clear();
     unsafe {
         for i in 0..v.size_from_lib {
-            let item = (*v.data_from_lib.add(i)).clone();
+            let item = (*v.data_from_lib.add(i as usize)).clone();
             result.push(__skadapter__to_<%= type %>(item));
         }
         __sklib__free__sklib_vector_<%= type %>(v);

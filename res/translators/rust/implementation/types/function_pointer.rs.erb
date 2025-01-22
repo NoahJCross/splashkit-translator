@@ -14,7 +14,8 @@
       type
     end.join(", ")
 %>
-pub type <%= fp[:name].type_case %> = extern "C" fn(<%= params %>) -> <%= return_type %>;
+pub type <%= fp[:name].type_case %> = Box<dyn Fn(<%= params %>) -> <%= return_type %> + Send + Sync>;
+pub type __sklib_<%= fp[:name].to_snake_case %> = extern "C" fn(<%= params %>) -> <%= return_type %>;
 <%
-  end # end function_pointers.each
+  end
 %>

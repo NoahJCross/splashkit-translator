@@ -22,7 +22,11 @@ impl __sklib_<%= struct[:name] %> {
         unsafe { uninit.assume_init() }
     }
 }
-#[derive(Debug, Clone, Copy)]
+<%
+    # Only derive PartialEq for non-color structs
+    derives = struct[:name] == "color" ? "Debug, Clone, Copy" : "Debug, Clone, Copy, PartialEq"
+%>
+#[derive(<%= derives %>)]
 pub struct <%= struct[:name].to_pascal_case %> {
 <%
     struct[:fields].each do |field_name, field_data|
@@ -33,12 +37,34 @@ pub struct <%= struct[:name].to_pascal_case %> {
     end
 %>
 }
+impl Default for <%= struct[:name].to_pascal_case %> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl <%= struct[:name].to_pascal_case %> {
     pub fn new() -> Self {
         let uninit = MaybeUninit::zeroed();
         unsafe { uninit.assume_init() }
     }
+    pub fn is_null(&self) -> bool {
+        *self == Self::default()
+    }
 }
+<%
+    if struct[:name] == "color"
+%>
+impl PartialEq for <%= struct[:name].to_pascal_case %> {
+    fn eq(&self, other: &Self) -> bool {
+        (self.r - other.r).abs() < 0.004 &&
+        (self.g - other.g).abs() < 0.004 &&
+        (self.b - other.b).abs() < 0.004 &&
+        (self.a - other.a).abs() < 0.004
+    }
+}
+<%
+    end
+%>
 <%
   end # structs.each
 %>

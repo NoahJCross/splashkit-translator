@@ -16,6 +16,10 @@ impl <%= typealias.type_case %> {
     fn as_ptr(&self) -> __sklib_ptr {
         self.ptr
     }
+
+    pub fn is_null(&self) -> bool {
+        self.ptr.is_null()
+    }
 }
 <%
   end # typealiases.each

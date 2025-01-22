@@ -28,6 +28,12 @@ pub enum <%= enum[:name].to_pascal_case %> {
     end # end constants.each
 %>
 }
+
+impl From<i32> for <%= enum[:name].to_pascal_case %> {
+    fn from(v: i32) -> Self {
+        __skadapter__to_<%= enum[:name].to_snake_case %>(v)
+    }
+}
 <%
   end # end enums.each
 %>

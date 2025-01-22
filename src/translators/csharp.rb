@@ -105,7 +105,7 @@ module Translators
           end
 
           result.unshift "public #{method_data[:static]}#{method_data[:return_type]} #{method_data[:class_name]}.#{property_name.to_pascal_case()} { #{text} }"
-        elsif method_data[:method_name]
+        else
           result.unshift "public #{method_data[:static]}#{method_data[:return_type]} #{method_data[:class_name]}.#{method_data[:method_name]}(#{method_data[:params]});"
         end
       end
@@ -113,9 +113,10 @@ module Translators
       result
     end
 
+
     def get_method_data(fn)
       {
-        method_name: fn[:method_name].nil? ? nil : fn[:method_name].to_s.to_pascal_case,
+        method_name: fn[:name].to_s.to_pascal_case,
         class_name: fn[:attributes][:class].nil? ? fn[:attributes][:static].to_pascal_case() : fn[:attributes][:class].to_pascal_case(),
         params: method_parameter_list_for(fn),
         args: method_argument_list_for(fn),

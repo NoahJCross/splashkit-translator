@@ -4,11 +4,56 @@
 <%
   @function_pointers.each do |fp|
     sk_fp_type = fp[:name].type_case
+    return_type = if is_func?(fp)
+      lib_type_for(fp[:return])
+    else
+      "()"
+    end
 %>
 #[inline]
-pub(crate) fn __skadapter__to_sklib_<%= fp[:name] %>(v: <%= sk_fp_type %>) -> <%= sk_fp_type %> {
-    v
+pub(crate) fn __skadapter__to_sklib_<%= fp[:name] %>(callback: <%= sk_fp_type %>) -> __sklib_<%= fp[:name].to_snake_case %> {
+    thread_local! {
+        static CALLBACK: RefCell<Option<<%= sk_fp_type %>>> = RefCell::new(None);
+    }
+    
+    CALLBACK.with(|cell| {
+        *cell.borrow_mut() = Some(callback);
+    });
+
+    extern "C" fn wrapper(
+<%
+    fp[:parameters].each do |param_name, param_data|
+%>
+        <%= param_name.to_s.to_snake_case %>: <%= lib_type_for(param_data) %>,
+<%
+    end
+%>
+    ) -> <%= return_type %> {
+        CALLBACK.with(|cell| {
+            if let Some(cb) = &*cell.borrow() {
+                cb(
+<%
+    fp[:parameters].each_with_index do |(param_name, param_data), index|
+      comma = index < fp[:parameters].length - 1 ? "," : ""
+      if void_pointer?(param_data)
+%>
+                    <%= param_name.to_s.to_snake_case %><%= comma %>
+<%
+      else
+%>
+                    __skadapter__to_<%= param_data[:type] %>(<%= param_name.to_s.to_snake_case %>)<%= comma %>
+<%
+      end
+%>
+<%
+    end
+%>
+                )
+            }
+        })
+    }
+    wrapper
 }
 <%
-  end # end function_pointers.each
+  end
 %>

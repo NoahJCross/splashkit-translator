@@ -2,6 +2,7 @@ require_relative 'abstract_translator'
 require_relative 'translator_helper'
 
 module Translators
+  # SplashKit Rust Library code generator
   class Rust < AbstractTranslator
     include TranslatorHelper
 
@@ -9,6 +10,9 @@ module Translators
       super(data, logging)
     end
 
+    #
+    # Generate the splashkit module
+    #
     def render_templates
       {
         'splashkit.rs' => read_template('splashkit.rs'),
@@ -25,6 +29,9 @@ module Translators
       constants:  :upper_case
     }
 
+    #
+    # Direct type map primitive data types between the adapter and library code.
+    #
     DIRECT_TYPES = {
       'int8_t'          => 'i8',
       'int'             => 'i32',
@@ -66,6 +73,9 @@ module Translators
       nil
     end
 
+    ##
+    # Generate Rust function signatures with appropriate modifiers
+    ##
     def signature_syntax(function, function_name, parameter_list, return_type, opts = {})
       pub = opts[:is_lib] ? '' : 'pub '
       unsafe = opts[:is_lib] ? 'unsafe ' : ''
@@ -75,10 +85,32 @@ module Translators
       "#{pub}#{unsafe}#{extern}fn #{function_name}(#{parameter_list})#{return_type}"
     end
 
+    ##
+    # Format function argument lists for calls
+    ##
+    def argument_list_syntax(arguments)
+      args = arguments.map do |arg_data|
+        var = arg_data[:name].variable_case
+        var = "r##{var}" if var == 'fn' # Handle 'fn' keyword conflict
+        if arg_data[:param_data][:is_reference] && !arg_data[:param_data][:is_const]
+          "&mut #{var}"
+        else
+          var
+        end
+      end
+      args.join(', ')
+    end
+
+    ##
+    # Generate SplashKit function names with optional suffixes
+    ##
     def sk_function_name_for(function)
       "#{function[:name].function_case}#{function[:attributes][:suffix].nil? ? '' : '_'}#{function[:attributes][:suffix]}"
     end
 
+    ##
+    # Format parameter lists for function declarations
+    ##
     def parameter_list_syntax(parameters, type_conversion_fn = :sk_type_for, opts = {})
       type_fn = opts[:is_lib] ? :lib_type_for : type_conversion_fn
       parameters.map do |param_name, param_data|
@@ -86,15 +118,26 @@ module Translators
       end.join(', ')
     end
 
+    ##
+    # Format individual parameter declarations
+    ##
     def parameter_syntax(param_name, param_data, type_conversion_fn = :sk_type_for)
       var = param_name.variable_case
-      "#{var == 'fn' ? 'r#fn' : var}: #{send(type_conversion_fn, param_data)}"
+      type = send(type_conversion_fn, param_data)
+      param_data[:is_reference] && !param_data[:is_const] && type = "&mut #{type}"
+      "#{var == 'fn' ? 'r#fn' : var}: #{type}" # Handle 'fn' keyword conflict
     end
 
+    ##
+    # Format struct field declarations
+    ##
     def struct_field_syntax(field_name, field_type, field_data)
       "pub #{field_name}: #{field_type}"
     end
 
+    ##
+    # Generate array type declarations for 1D and 2D arrays
+    ##
     def array_declaration_syntax(array_type, dim1_size, dim2_size = nil)
       if dim2_size.nil?
         "[#{array_type}; #{dim1_size}]"
@@ -103,6 +146,9 @@ module Translators
       end
     end
 
+    ##
+    # Generate array access syntax for 1D and 2D arrays
+    ##
     def array_at_index_syntax(idx1, idx2 = nil)
       if idx2.nil?
         "[#{idx1}]"

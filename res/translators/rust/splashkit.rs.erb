@@ -6,7 +6,7 @@ use std::{
     mem::{forget, zeroed, MaybeUninit},
     os::raw::{c_char, c_int},
     ptr::{null_mut},
-    sync::{OnceLock},
+    cell::{RefCell},
 };
 
 type __sklib_ptr = *mut c_void;
