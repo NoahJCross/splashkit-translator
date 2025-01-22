@@ -62,6 +62,7 @@ module Translators
 
     def type_exceptions(type_data, type_conversion_fn, opts = {})
       return '__sklib_ptr' if void_pointer?(type_data)
+      return "__sklib_#{type_data[:type].to_snake_case}" if function_pointer?(type_data) && opts[:is_lib]
       return type_data[:type].type_case if function_pointer?(type_data)
 
       if vector_type?(type_data)
