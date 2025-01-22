@@ -169,7 +169,7 @@ module Translators
       @clib.sk_update_fn_for(function)
     end
 
-<<<<<<< HEAD
+
     def array_at_index_syntax(idx1, idx2 = nil)
       if idx2.nil?
         "[#{idx1}]"
@@ -184,7 +184,6 @@ module Translators
       else
         "lhs.#{field_name} == rhs.#{field_name}#{is_last ? ';' : ' &&'}"
       end
-=======
     #
     # Compare two struct fields for equality
     #
@@ -207,7 +206,7 @@ module Translators
       end
       result[-1] += ';' if is_last
       result
->>>>>>> cpp-equality-operators
+
     end
   end
 end
