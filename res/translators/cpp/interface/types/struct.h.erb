@@ -24,7 +24,10 @@ inline bool operator==(const <%= struct[:name] %>& lhs, const <%= struct[:name] 
     return 
 <%  struct[:fields].each_with_index do |(field_name, field_data), idx|
       is_last = idx == struct[:fields].length - 1
+<<<<<<< HEAD
       field_name = field_name.field_case
+=======
+>>>>>>> cpp-equality-operators
       sk_comparison_for(field_name, field_data, is_last).each do |comparison| %>
         <%= comparison %><%= "\n" %>
 <%    end %>
