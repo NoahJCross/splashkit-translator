@@ -184,29 +184,6 @@ module Translators
       else
         "lhs.#{field_name} == rhs.#{field_name}#{is_last ? ';' : ' &&'}"
       end
-    #
-    # Compare two struct fields for equality
-    #
-    def sk_comparison_for(field_name, field_data, is_last)
-      if field_data[:is_array]
-        sk_array_comparison_for(field_name, field_data, is_last)
-      else
-        ["lhs.#{field_name} == rhs.#{field_name}#{is_last ? ';' : ' &&'}"]
-      end
-    end
-
-    #
-    # Compare two array fields for equality
-    #
-    def sk_array_comparison_for(field_name, field_data, is_last)
-      array_size = field_data[:array_dimension_sizes].inject(:*)
-      result = (0...array_size).map do |i|
-        is_last_element = is_last && (i == array_size - 1)
-        "lhs.#{field_name}[#{i}] == rhs.#{field_name}[#{i}]#{is_last_element ? '' : ' &&'}"
-      end
-      result[-1] += ';' if is_last
-      result
-
     end
   end
 end
